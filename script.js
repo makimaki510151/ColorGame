@@ -146,7 +146,7 @@ function gameLoop() {
     }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const boundaryX = gameContainer.offsetWidth * 0.25;
+    const boundaryX = 0;
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.lineTo(0, canvas.height);
@@ -236,7 +236,7 @@ colorButtons.forEach(button => {
             return;
         }
         isColorSwitching = true;
-        
+
         colorButtons.forEach(btn => btn.classList.remove('selected'));
         button.classList.add('selected');
         combo = 0;
@@ -257,7 +257,7 @@ canvas.addEventListener('click', (e) => {
 });
 
 canvas.addEventListener('touchstart', (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
     const rect = canvas.getBoundingClientRect();
     const x = e.touches[0].clientX - rect.left;
     const y = e.touches[0].clientY - rect.top;
@@ -266,4 +266,9 @@ canvas.addEventListener('touchstart', (e) => {
 
 restartButton.addEventListener('click', init);
 
-init();
+init(
+    // 画面の向きが変わったときのイベントリスナー
+    window.addEventListener('orientationchange', () => {
+        resizeCanvas();
+    })
+);
