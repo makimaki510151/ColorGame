@@ -37,7 +37,7 @@ const colorNames = Object.keys(colors);
 // 敵のクラス
 class Enemy {
     constructor(color) {
-        this.size = 40; // ★★★ 敵のサイズを40に変更 ★★★
+        this.size = 40;
         this.x = canvas.width + this.size;
         this.y = Math.random() * (canvas.height - this.size);
         this.color = color;
@@ -88,10 +88,9 @@ function init() {
 
 // ゲーム開始処理
 function startGame() {
-    // ★★★ 縦画面チェックを追加 ★★★
     if (isMobileDevice() && window.innerHeight > window.innerWidth) {
         alert('快適にプレイするために、画面を横向きにしてください。');
-        return; // ゲーム開始を中断
+        return;
     }
 
     startScreen.classList.add('hidden');
@@ -213,7 +212,7 @@ function gameOver() {
     scoreDisplayContainer.classList.add('hidden');
 }
 
-// ★★★ 端末がモバイルかどうかを判定する関数 ★★★
+// 端末がモバイルかどうかを判定する関数
 function isMobileDevice() {
     return (typeof window.orientation !== "undefined") || (navigator.userAgent.indexOf('IEMobile') !== -1);
 };
@@ -238,12 +237,18 @@ canvas.addEventListener('click', (e) => {
     handleHit(x, y);
 });
 
+// ★★★ タッチイベントの修正 ★★★
 canvas.addEventListener('touchstart', (e) => {
+    // デフォルトのブラウザ動作（スクロール、ピンチズームなど）を無効にする
+    e.preventDefault(); 
+    
+    // 最初のタッチ（指）の位置を取得して処理
     const rect = canvas.getBoundingClientRect();
     const x = e.touches[0].clientX - rect.left;
     const y = e.touches[0].clientY - rect.top;
     handleHit(x, y);
-});
+}, { passive: false }); // passive: false を設定して preventDefault() を有効にする
 
+// リスタートボタン
 restartButton.addEventListener('click', init);
 init();
