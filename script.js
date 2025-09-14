@@ -42,12 +42,13 @@ class Enemy {
         this.y = Math.random() * (canvas.height - this.size);
         this.color = color;
         this.speed = (Math.random() * 1.5 + 1.5) / 5;
+        this.borderColor = 'white';
     }
 
     draw() {
         ctx.fillStyle = this.color;
         ctx.fillRect(this.x, this.y, this.size, this.size);
-        ctx.strokeStyle = 'white';
+        ctx.strokeStyle = this.borderColor;
         ctx.strokeRect(this.x, this.y, this.size, this.size);
     }
 
@@ -205,6 +206,8 @@ function handleHit(x, y) {
             } else {
                 combo = 0;
             }
+            // ★★★ 敵のボーダーカラーを更新する処理を追加 ★★★
+            updateEnemyBorders();
             updateUI();
             return;
         }
@@ -220,6 +223,17 @@ function gameOver() {
     scoreDisplayContainer.classList.add('hidden');
 }
 
+// 敵のボーダーカラーを更新する関数
+function updateEnemyBorders() {
+    enemies.forEach(enemy => {
+        if (colors[selectedColor] === enemy.color) {
+            enemy.borderColor = '#f39c12';
+        } else {
+            enemy.borderColor = 'white';
+        }
+    });
+}
+
 // イベントリスナーの設定
 
 startButton.addEventListener('click', startGame);
@@ -231,6 +245,8 @@ colorButtons.forEach(button => {
         button.classList.add('selected');
         combo = 0;
         selectedColor = button.dataset.color;
+        // ★★★ 敵のボーダーカラーを更新する処理を追加 ★★★
+        updateEnemyBorders();
         updateUI();
     });
 
@@ -244,6 +260,8 @@ colorButtons.forEach(button => {
         button.classList.add('selected');
         combo = 0;
         selectedColor = button.dataset.color;
+        // ★★★ 敵のボーダーカラーを更新する処理を追加 ★★★
+        updateEnemyBorders();
         updateUI();
     }, { passive: true });
 
