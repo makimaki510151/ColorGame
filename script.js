@@ -47,13 +47,13 @@ class Enemy {
     draw() {
         ctx.fillStyle = this.color;
         ctx.fillRect(this.x, this.y, this.size, this.size);
-        
+
         if (this.color === colors[selectedColor]) {
             ctx.strokeStyle = '#f39c12';
         } else {
             ctx.strokeStyle = 'white';
         }
-        
+
         ctx.strokeRect(this.x, this.y, this.size, this.size);
     }
 
@@ -90,6 +90,12 @@ function startGame() {
     if (isMobileDevice() && window.innerHeight > window.innerWidth) {
         alert('快適にプレイするために、画面を横向きにしてください。');
         return;
+    }
+
+    // スマートフォンとタブレットのみを対象にする
+    if (typeof window.orientation !== 'undefined' && navigator.userAgent.indexOf('IEMobile') === -1) {
+        // わずかにスクロールさせることでURLバーを隠す
+        window.scrollTo(0, 1);
     }
 
     startScreen.classList.add('hidden');
@@ -236,7 +242,7 @@ colorButtons.forEach(button => {
             return;
         }
         isColorSwitching = true;
-        
+
         colorButtons.forEach(btn => btn.classList.remove('selected'));
         button.classList.add('selected');
         combo = 0;
@@ -257,7 +263,7 @@ canvas.addEventListener('click', (e) => {
 });
 
 canvas.addEventListener('touchstart', (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
     const rect = canvas.getBoundingClientRect();
     const x = e.touches[0].clientX - rect.left;
     const y = e.touches[0].clientY - rect.top;
