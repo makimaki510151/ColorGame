@@ -92,12 +92,6 @@ function startGame() {
         return;
     }
 
-    // スマートフォンとタブレットのみを対象にする
-    if (typeof window.orientation !== 'undefined' && navigator.userAgent.indexOf('IEMobile') === -1) {
-        // わずかにスクロールさせることでURLバーを隠す
-        window.scrollTo(0, 1);
-    }
-
     startScreen.classList.add('hidden');
     gameContainer.classList.remove('hidden');
     scoreDisplayContainer.classList.remove('hidden');
@@ -144,6 +138,12 @@ function gameLoop() {
         clearInterval(gameInterval);
         return;
     }
+    // スマートフォンとタブレットのみを対象にする
+    if (typeof window.orientation !== 'undefined' && navigator.userAgent.indexOf('IEMobile') === -1) {
+        // わずかにスクロールさせることでURLバーを隠す
+        window.scrollTo(0, 1);
+    }
+
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const boundaryX = 0;
