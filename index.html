@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カラーマッチ・シューター</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="start-screen">
+        <h1>カラーマッチ・シューター</h1>
+        <p>画面左の色を選択し、右から流れてくる同じ色の敵をクリック（タップ）して撃破しよう！</p>
+        <p>同じ色の敵を連続で撃破するとコンボが発生し、高スコアを狙えるぞ！</p>
+        <p>敵が画面左端に到達するとゲームオーバーだ！</p>
+        <button id="start-button">ゲームスタート</button>
+    </div>
+
+    <div id="game-container" class="hidden">
+        <div id="color-palette">
+            <div class="color-button" data-color="red" style="background-color: #ff6347;"></div>
+            <div class="color-button" data-color="green" style="background-color: #3cb371;"></div>
+            <div class="color-button" data-color="blue" style="background-color: #4682b4;"></div>
+        </div>
+        <canvas id="game-canvas"></canvas>
+    </div>
+    
+    <div id="game-over-screen" class="hidden">
+        <h2>ゲームオーバー</h2>
+        <p>スコア: <span id="final-score">0</span></p>
+        <button id="restart-button">もう一度プレイ</button>
+    </div>
+    <div id="score-display" class="hidden">
+        スコア: <span id="current-score">0</span>
+        <br>
+        コンボ: <span id="combo-count">0</span>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
