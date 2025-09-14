@@ -127,12 +127,15 @@ function startGame() {
 function resizeCanvas() {
     if (!gameContainer.classList.contains('hidden')) {
         const padding = 0.1;
+        // 画面の高さと幅から、内側のゲームコンテナのサイズを計算
+        // ここでは、CSSで設定した100dvhと90vwを前提としています
         gameContainer.style.height = `${window.innerHeight * (1 - padding)}px`;
         gameContainer.style.width = `${window.innerWidth * (1 - padding)}px`;
-
+        
         canvas.width = gameContainer.offsetWidth * 0.75;
         canvas.height = gameContainer.offsetHeight;
     } else {
+        // スタート画面では固定サイズを使用
         canvas.width = 800 * 0.75;
         canvas.height = 600;
     }
