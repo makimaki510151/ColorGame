@@ -24,7 +24,7 @@ let isGameOver = false;
 let enemiesDefeatedCount = 0;
 
 // Web Audio APIのコンテキスト
-let audioContext;
+let audioContext; // ★★★ 追加: Web Audio APIのコンテキストを宣言 ★★★
 
 // 色の定義
 const colors = {
@@ -37,11 +37,10 @@ const colorNames = Object.keys(colors);
 // 敵のクラス
 class Enemy {
     constructor(color) {
-        this.size = 30; // 敵のサイズを元の30に戻す
+        this.size = 40;
         this.x = canvas.width + this.size;
         this.y = Math.random() * (canvas.height - this.size);
         this.color = color;
-        // 速度を全体的に1/5に変更 (0.3から0.6のランダムな速度)
         this.speed = (Math.random() * 1.5 + 1.5) / 5;
     }
 
@@ -57,6 +56,21 @@ class Enemy {
     }
 }
 
+// 効果音を生成して再生する関数 ★★★ 追加 ★★★
+function playHitSound() {
+    if (!audioContext) return;
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.1);
+}
+
 // ゲームの初期化（スタート画面表示）
 function init() {
     score = 0;
@@ -67,7 +81,6 @@ function init() {
     isGameOver = false;
     updateUI();
 
-    // UIの表示/非表示を管理
     startScreen.classList.remove('hidden');
     gameContainer.classList.add('hidden');
     scoreDisplayContainer.classList.add('hidden');
@@ -76,24 +89,19 @@ function init() {
     colorButtons.forEach(btn => btn.classList.remove('selected'));
     document.querySelector('.color-button[data-color="red"]').classList.add('selected');
 
-    // キャンバスのリサイズ
     resizeCanvas();
-    window.addEventListener('resize', resizeCanvas); // 画面サイズや向きが変わるたびに呼び出す
+    window.addEventListener('resize', resizeCanvas);
 
-    // 既存のゲームループがあれば停止
     if (gameInterval) clearInterval(gameInterval);
 }
 
 // ゲーム開始処理
 function startGame() {
-    // 端末がモバイルかどうかを判定する関数を修正
     function isMobileDevice() {
-        // userAgentで一般的なモバイルデバイスを判定
         const userAgent = navigator.userAgent || navigator.vendor || window.opera;
         return /android|iphone|ipad|ipod|windows phone/i.test(userAgent);
     };
 
-    // ゲーム開始前に縦向きの場合はアラートを表示
     if (isMobileDevice() && window.innerHeight > window.innerWidth) {
         alert('快適にプレイするために、画面を横向きにしてください。');
         return;
@@ -103,13 +111,14 @@ function startGame() {
     gameContainer.classList.remove('hidden');
     scoreDisplayContainer.classList.remove('hidden');
 
-    // ゲーム開始時にキャンバスのサイズを正しく設定
     resizeCanvas();
 
-    // 最初の敵を生成
-    spawnEnemy();
+    // ★★★ 追加: audioContextを初期化 ★★★
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
 
-    // ゲームループを開始
+    spawnEnemy();
     gameInterval = setInterval(gameLoop, 1000 / 60);
 }
 
@@ -117,15 +126,13 @@ function startGame() {
 // キャンバスのリサイズ処理
 function resizeCanvas() {
     if (!gameContainer.classList.contains('hidden')) {
-        const padding = 0.1; // 10%の余白
+        const padding = 0.1;
         gameContainer.style.height = `${window.innerHeight * (1 - padding)}px`;
         gameContainer.style.width = `${window.innerWidth * (1 - padding)}px`;
 
-        // canvasのサイズを親要素のサイズに合わせて設定
         canvas.width = gameContainer.offsetWidth * 0.75;
         canvas.height = gameContainer.offsetHeight;
     } else {
-        // スタート画面では固定サイズ
         canvas.width = 800 * 0.75;
         canvas.height = 600;
     }
@@ -138,27 +145,21 @@ function gameLoop() {
         return;
     }
 
-    // 画面クリア
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // 境界線の描画
-    const boundaryX = 0;
+    const boundaryX = gameContainer.offsetWidth * 0.25;
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.lineTo(0, canvas.height);
-    ctx.strokeStyle = 'red'; // 境界線の色を赤に変更
+    ctx.strokeStyle = 'red';
     ctx.lineWidth = 3;
     ctx.stroke();
 
-    // 敵の更新と描画
     enemies.forEach(enemy => {
         enemy.update();
         enemy.draw();
     });
 
-    // 敵が境界線に到達したかの判定
     enemies = enemies.filter(enemy => {
-        // 敵が境界線に触れたらゲームオーバー
         if (enemy.x <= boundaryX) {
             gameOver();
             return false;
@@ -183,37 +184,26 @@ function updateUI() {
 
 // 撃破処理
 function handleHit(x, y) {
-    if (isGameOver) return; // ゲームオーバー中は操作無効
+    if (isGameOver) return;
 
-    // 敵の配列を逆順にチェックして、手前の敵から判定
     for (let i = enemies.length - 1; i >= 0; i--) {
         const enemy = enemies[i];
-        if (x > enemy.x && x < enemy.x + enemy.size &&
-            y > enemy.y && y < enemy.y + enemy.size) {
-
-            // 選択中の色と敵の色が一致しているか判定
+        if (x > enemy.x && x < enemy.x + enemy.size && y > enemy.y && y < enemy.y + enemy.size) {
             if (colors[selectedColor] === enemy.color) {
-                // 撃破成功
                 combo++;
-                score += 100 * combo; // コンボに応じてスコア増加
-                enemiesDefeatedCount++; // 撃破数をインクリメント
-
-                // 撃破した敵を配列から削除
+                score += 100 * combo;
+                enemiesDefeatedCount++;
                 enemies.splice(i, 1);
-
                 spawnEnemy(1);
-
-                // 5体倒すごとに1体増殖
                 if (enemiesDefeatedCount % 5 === 0) {
                     spawnEnemy(1);
                 }
-
+                playHitSound(); // ★★★ 復元: 効果音を再生 ★★★
             } else {
-                // 色が不一致、コンボリセット
                 combo = 0;
             }
             updateUI();
-            return; // 1体だけ処理
+            return;
         }
     }
 }
@@ -223,28 +213,42 @@ function gameOver() {
     isGameOver = true;
     finalScoreDisplay.textContent = score;
     gameOverScreen.classList.remove('hidden');
-    gameContainer.classList.add('hidden'); // ゲーム画面を非表示
-    scoreDisplayContainer.classList.add('hidden'); // スコア表示も非表示
+    gameContainer.classList.add('hidden');
+    scoreDisplayContainer.classList.add('hidden');
 }
 
 // イベントリスナーの設定
 
-// スタートボタン
 startButton.addEventListener('click', startGame);
 
-// 色選択ボタン
+let isColorSwitching = false;
 colorButtons.forEach(button => {
     button.addEventListener('click', () => {
         colorButtons.forEach(btn => btn.classList.remove('selected'));
         button.classList.add('selected');
-        // 選択色を変更した時点でコンボをリセットする
         combo = 0;
         selectedColor = button.dataset.color;
-        updateUI(); // UIを更新してコンボを0にする
+        updateUI();
+    });
+
+    button.addEventListener('touchstart', (e) => {
+        if (isColorSwitching) {
+            return;
+        }
+        isColorSwitching = true;
+        
+        colorButtons.forEach(btn => btn.classList.remove('selected'));
+        button.classList.add('selected');
+        combo = 0;
+        selectedColor = button.dataset.color;
+        updateUI();
+    }, { passive: true });
+
+    button.addEventListener('touchend', () => {
+        isColorSwitching = false;
     });
 });
 
-// キャンバスのクリック（PC）
 canvas.addEventListener('click', (e) => {
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -252,16 +256,14 @@ canvas.addEventListener('click', (e) => {
     handleHit(x, y);
 });
 
-// キャンバスのタッチ（スマートフォン）
 canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault(); 
     const rect = canvas.getBoundingClientRect();
     const x = e.touches[0].clientX - rect.left;
     const y = e.touches[0].clientY - rect.top;
     handleHit(x, y);
-});
+}, { passive: false });
 
-// リスタートボタン
-restartButton.addEventListener('click', init); // init()でスタート画面に戻る
+restartButton.addEventListener('click', init);
 
-// 初期化（ページロード時）
 init();
