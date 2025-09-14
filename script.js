@@ -21,7 +21,10 @@ let selectedColor = 'red';
 let enemies = [];
 let gameInterval;
 let isGameOver = false;
-let enemiesDefeatedCount = 0; // 新規追加：撃破した敵の数をカウント
+let enemiesDefeatedCount = 0;
+
+// Web Audio APIのコンテキスト
+let audioContext;
 
 // 色の定義
 const colors = {
@@ -75,7 +78,7 @@ function init() {
 
     // キャンバスのリサイズ
     resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('resize', resizeCanvas); // 画面サイズや向きが変わるたびに呼び出す
 
     // 既存のゲームループがあれば停止
     if (gameInterval) clearInterval(gameInterval);
@@ -83,6 +86,19 @@ function init() {
 
 // ゲーム開始処理
 function startGame() {
+    // 端末がモバイルかどうかを判定する関数を修正
+    function isMobileDevice() {
+        // userAgentで一般的なモバイルデバイスを判定
+        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+        return /android|iphone|ipad|ipod|windows phone/i.test(userAgent);
+    };
+
+    // ゲーム開始前に縦向きの場合はアラートを表示
+    if (isMobileDevice() && window.innerHeight > window.innerWidth) {
+        alert('快適にプレイするために、画面を横向きにしてください。');
+        return;
+    }
+
     startScreen.classList.add('hidden');
     gameContainer.classList.remove('hidden');
     scoreDisplayContainer.classList.remove('hidden');
@@ -101,11 +117,10 @@ function startGame() {
 // キャンバスのリサイズ処理
 function resizeCanvas() {
     if (!gameContainer.classList.contains('hidden')) {
-        // ★★★ 修正: 画面サイズから余白を考慮したサイズを設定 ★★★
         const padding = 0.1; // 10%の余白
         gameContainer.style.height = `${window.innerHeight * (1 - padding)}px`;
         gameContainer.style.width = `${window.innerWidth * (1 - padding)}px`;
-        
+
         // canvasのサイズを親要素のサイズに合わせて設定
         canvas.width = gameContainer.offsetWidth * 0.75;
         canvas.height = gameContainer.offsetHeight;
@@ -127,7 +142,7 @@ function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // 境界線の描画
-    const boundaryX = gameContainer.offsetWidth * 0.25;
+    const boundaryX = 0;
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.lineTo(0, canvas.height);
