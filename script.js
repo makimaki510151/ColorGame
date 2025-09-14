@@ -74,7 +74,6 @@ function init() {
 
     startScreen.classList.remove('hidden');
     gameContainer.classList.add('hidden');
-    scoreDisplayContainer.classList.add('hidden');
     gameOverScreen.classList.add('hidden');
 
     colorButtons.forEach(btn => btn.classList.remove('selected'));
@@ -220,11 +219,10 @@ function isMobileDevice() {
 // イベントリスナーの設定
 startButton.addEventListener('click', startGame);
 
-// ★★★ 長押しによる連続切り替えを防ぐための修正 ★★★
-let isColorSwitching = false; // 新しいフラグ変数を追加
+// 長押しによる連続切り替えを防ぐための修正
+let isColorSwitching = false;
 
 colorButtons.forEach(button => {
-    // マウスでのクリックイベント
     button.addEventListener('click', () => {
         colorButtons.forEach(btn => btn.classList.remove('selected'));
         button.classList.add('selected');
@@ -233,23 +231,19 @@ colorButtons.forEach(button => {
         updateUI();
     });
 
-    // タッチデバイスでのタッチ開始イベント
     button.addEventListener('touchstart', (e) => {
-        // 長押し対策：すでに処理が進行中の場合は何もしない
         if (isColorSwitching) {
             return;
         }
-        isColorSwitching = true; // 処理開始
+        isColorSwitching = true;
         
-        // 処理内容
         colorButtons.forEach(btn => btn.classList.remove('selected'));
         button.classList.add('selected');
         combo = 0;
         selectedColor = button.dataset.color;
         updateUI();
-    }, { passive: true }); // パッシブリスナーとして設定（スクロールなどを妨げない）
+    }, { passive: true });
 
-    // 指が離れたときにフラグをリセット
     button.addEventListener('touchend', () => {
         isColorSwitching = false;
     });

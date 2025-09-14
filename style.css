@@ -65,6 +65,10 @@ body {
     font-weight: bold;
     text-align: right;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
+    /* ★★★ 追加：下の要素への操作を可能にする ★★★ */
+    z-index: 2;
+    /* ★★★ 変更：ゲームウィンドウより手前に表示 ★★★ */
 }
 
 /* スタート画面、ゲームオーバー画面共通のスタイル */
