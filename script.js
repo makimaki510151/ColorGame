@@ -141,7 +141,7 @@ function gameLoop() {
     // スマートフォンとタブレットのみを対象にする
     if (typeof window.orientation !== 'undefined' && navigator.userAgent.indexOf('IEMobile') === -1) {
         // わずかにスクロールさせることでURLバーを隠す
-        window.scrollTo(0, 1);
+        window.scrollTo(0, -1);
     }
 
 
