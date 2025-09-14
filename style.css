@@ -1,4 +1,6 @@
 body {
+    position: relative;
+    /* ★★★ 追加 ★★★ */
     background-color: #2c3e50;
     color: #ecf0f1;
     font-family: 'Arial', sans-serif;
@@ -8,7 +10,6 @@ body {
     height: 100vh;
     margin: 0;
     overflow: hidden;
-    position: relative;
 }
 
 #game-container {
@@ -20,6 +21,10 @@ body {
     border: 3px solid #f39c12;
     background-color: #34495e;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    position: relative;
+    /* ★★★ 追加 ★★★ */
+    z-index: 1;
+    /* ★★★ 追加 ★★★ */
 }
 
 #color-palette {
