@@ -81,6 +81,10 @@ body {
     border: 3px solid #f39c12;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
     z-index: 10;
+    
+    /* 修正 */
+    max-height: 90vh; /* 画面の高さの90%を最大に */
+    overflow-y: auto; /* コンテンツがはみ出た場合にスクロールを可能に */
 }
 
 #start-screen h1,
