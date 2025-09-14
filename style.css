@@ -3,7 +3,6 @@ body {
     color: #ecf0f1;
     font-family: 'Arial', sans-serif;
     display: flex;
-    /* ★★★ 変更: align-items: center; を削除して、上部に配置する ★★★ */
     justify-content: center;
     height: 100vh;
     margin: 0;
@@ -14,15 +13,12 @@ body {
 #game-container {
     display: flex;
     width: 90vw;
-    height: 90vh;
+    /* ★★★ 削除: height: 90vh; ★★★ */
     max-width: 1200px;
     max-height: 800px;
     border: 3px solid #f39c12;
     background-color: #34495e;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-    /* ★★★ 追加 ★★★ */
-    position: relative;
-    z-index: 1;
 }
 
 #color-palette {
