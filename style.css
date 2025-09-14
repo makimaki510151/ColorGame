@@ -21,10 +21,9 @@ body {
     border: 3px solid #f39c12;
     background-color: #34495e;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    /* ★★★ 追加 ★★★ */
     position: relative;
-    /* ★★★ 追加 ★★★ */
     z-index: 1;
-    /* ★★★ 追加 ★★★ */
 }
 
 #color-palette {
