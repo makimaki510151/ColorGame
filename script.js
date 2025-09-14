@@ -100,11 +100,11 @@ function startGame() {
 
 // キャンバスのリサイズ処理
 function resizeCanvas() {
-    // ★★★ 修正 ★★★
     if (!gameContainer.classList.contains('hidden')) {
-        // gameContainerのサイズを設定
-        gameContainer.style.height = `${window.innerHeight}px`;
-        gameContainer.style.width = `${window.innerWidth}px`;
+        // ★★★ 修正: 画面サイズから余白を考慮したサイズを設定 ★★★
+        const padding = 0.1; // 10%の余白
+        gameContainer.style.height = `${window.innerHeight * (1 - padding)}px`;
+        gameContainer.style.width = `${window.innerWidth * (1 - padding)}px`;
         
         // canvasのサイズを親要素のサイズに合わせて設定
         canvas.width = gameContainer.offsetWidth * 0.75;
