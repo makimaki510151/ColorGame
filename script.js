@@ -220,13 +220,38 @@ function isMobileDevice() {
 // イベントリスナーの設定
 startButton.addEventListener('click', startGame);
 
+// ★★★ 長押しによる連続切り替えを防ぐための修正 ★★★
+let isColorSwitching = false; // 新しいフラグ変数を追加
+
 colorButtons.forEach(button => {
+    // マウスでのクリックイベント
     button.addEventListener('click', () => {
         colorButtons.forEach(btn => btn.classList.remove('selected'));
         button.classList.add('selected');
         combo = 0;
         selectedColor = button.dataset.color;
         updateUI();
+    });
+
+    // タッチデバイスでのタッチ開始イベント
+    button.addEventListener('touchstart', (e) => {
+        // 長押し対策：すでに処理が進行中の場合は何もしない
+        if (isColorSwitching) {
+            return;
+        }
+        isColorSwitching = true; // 処理開始
+        
+        // 処理内容
+        colorButtons.forEach(btn => btn.classList.remove('selected'));
+        button.classList.add('selected');
+        combo = 0;
+        selectedColor = button.dataset.color;
+        updateUI();
+    }, { passive: true }); // パッシブリスナーとして設定（スクロールなどを妨げない）
+
+    // 指が離れたときにフラグをリセット
+    button.addEventListener('touchend', () => {
+        isColorSwitching = false;
     });
 });
 
@@ -237,18 +262,13 @@ canvas.addEventListener('click', (e) => {
     handleHit(x, y);
 });
 
-// ★★★ タッチイベントの修正 ★★★
 canvas.addEventListener('touchstart', (e) => {
-    // デフォルトのブラウザ動作（スクロール、ピンチズームなど）を無効にする
     e.preventDefault(); 
-    
-    // 最初のタッチ（指）の位置を取得して処理
     const rect = canvas.getBoundingClientRect();
     const x = e.touches[0].clientX - rect.left;
     const y = e.touches[0].clientY - rect.top;
     handleHit(x, y);
-}, { passive: false }); // passive: false を設定して preventDefault() を有効にする
+}, { passive: false });
 
-// リスタートボタン
 restartButton.addEventListener('click', init);
 init();
