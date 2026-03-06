@@ -34,7 +34,6 @@ class Enemy {
         this.y = Math.random() * (logicalHeight - this.size);
         const randomColorName = colorNames[Math.floor(Math.random() * colorNames.length)];
         this.color = colors[randomColorName];
-        // スピードを少し低速に調整（80〜120 → 60〜90）
         this.speed = (Math.random() * 30 + 60); 
         this.borderColor = 'white';
     }
@@ -108,7 +107,6 @@ function gameLoop(timestamp) {
 
     ctx.clearRect(0, 0, logicalWidth, logicalHeight);
 
-    // デッドライン
     ctx.strokeStyle = 'red';
     ctx.lineWidth = 4;
     ctx.beginPath();
@@ -142,7 +140,6 @@ function handleHit(clientX, clientY) {
                 enemiesDefeatedCount++;
                 enemies.splice(i, 1);
                 spawnEnemy();
-                // 5体ごとに少しだけ追加（難易度の緩やかな上昇）
                 if (enemiesDefeatedCount % 5 === 0) spawnEnemy();
                 playHitSound();
             } else {
@@ -182,10 +179,16 @@ restartButton.addEventListener('click', startGame);
 colorButtons.forEach(btn => {
     const select = (e) => {
         if (e) e.preventDefault();
+        
+        // 色を切り替えた時点でコンボ（スコアボーナス）をリセット
+        combo = 0; 
+        
         selectedColor = btn.dataset.color;
         colorButtons.forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
+        
         updateEnemyBorders();
+        updateUI(); // コンボ表示を即座に更新
     };
     btn.addEventListener('touchstart', select, { passive: false });
     btn.addEventListener('mousedown', select);
