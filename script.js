@@ -1,8 +1,5 @@
-// キャンバスとコンテキストの取得
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
-
-// UI要素の取得
 const colorButtons = document.querySelectorAll('.color-button');
 const scoreDisplay = document.getElementById('current-score');
 const comboCountDisplay = document.getElementById('combo-count');
@@ -14,19 +11,11 @@ const startButton = document.getElementById('start-button');
 const gameContainer = document.getElementById('game-container');
 const scoreDisplayContainer = document.getElementById('score-display');
 
-// ゲームの状態変数
-let score = 0;
-let combo = 0;
-let selectedColor = 'red';
-let enemies = [];
-let gameInterval;
-let isGameOver = false;
-let enemiesDefeatedCount = 0;
+let score = 0, combo = 0, selectedColor = 'red', enemies = [];
+let isGameOver = false, enemiesDefeatedCount = 0;
+let lastTime = 0;
+let audioContext;
 
-// Web Audio APIのコンテキスト
-let audioContext; // ★★★ 追加: Web Audio APIのコンテキストを宣言 ★★★
-
-// 色の定義
 const colors = {
     red: '#ff6347',
     green: '#3cb371',
@@ -34,14 +23,19 @@ const colors = {
 };
 const colorNames = Object.keys(colors);
 
-// 敵のクラス
 class Enemy {
-    constructor(color) {
-        this.size = 40;
-        this.x = canvas.width + this.size;
-        this.y = Math.random() * (canvas.height - this.size);
-        this.color = color;
-        this.speed = (Math.random() * 1.5 + 1.5) / 5;
+    constructor() {
+        const dpr = window.devicePixelRatio || 1;
+        this.size = 50;
+        const logicalWidth = canvas.width / dpr;
+        const logicalHeight = canvas.height / dpr;
+        
+        this.x = logicalWidth + this.size;
+        this.y = Math.random() * (logicalHeight - this.size);
+        const randomColorName = colorNames[Math.floor(Math.random() * colorNames.length)];
+        this.color = colors[randomColorName];
+        // スピードを少し低速に調整（80〜120 → 60〜90）
+        this.speed = (Math.random() * 30 + 60); 
         this.borderColor = 'white';
     }
 
@@ -49,164 +43,111 @@ class Enemy {
         ctx.fillStyle = this.color;
         ctx.fillRect(this.x, this.y, this.size, this.size);
         ctx.strokeStyle = this.borderColor;
+        ctx.lineWidth = 3;
         ctx.strokeRect(this.x, this.y, this.size, this.size);
     }
 
-    update() {
-        this.x -= this.speed;
+    update(dt) {
+        this.x -= this.speed * dt;
     }
 }
 
-// 効果音を生成して再生する関数 ★★★ 追加 ★★★
+function resizeCanvas() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    updateEnemyBorders();
+}
+
 function playHitSound() {
     if (!audioContext) return;
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
-    gainNode.gain.setValueAtTime(1, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.1);
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(500, audioContext.currentTime);
+    gain.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+    osc.connect(gain).connect(audioContext.destination);
+    osc.start();
+    osc.stop(audioContext.currentTime + 0.1);
 }
 
-// ゲームの初期化（スタート画面表示）
-function init() {
-    score = 0;
-    combo = 0;
-    enemiesDefeatedCount = 0;
-    selectedColor = 'red';
-    enemies = [];
-    isGameOver = false;
-    updateUI();
-
-    startScreen.classList.remove('hidden');
-    gameContainer.classList.add('hidden');
-    scoreDisplayContainer.classList.add('hidden');
-    gameOverScreen.classList.add('hidden');
-
-    colorButtons.forEach(btn => btn.classList.remove('selected'));
-    document.querySelector('.color-button[data-color="red"]').classList.add('selected');
-
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    if (gameInterval) clearInterval(gameInterval);
+function spawnEnemy() {
+    enemies.push(new Enemy());
 }
 
-// ゲーム開始処理
-function startGame() {
-    function isMobileDevice() {
-        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-        return /android|iphone|ipad|ipod|windows phone/i.test(userAgent);
-    };
-
-    if (isMobileDevice() && window.innerHeight > window.innerWidth) {
-        alert('快適にプレイするために、画面を横向きにしてください。');
-        return;
-    }
-
-    startScreen.classList.add('hidden');
-    gameContainer.classList.remove('hidden');
-    scoreDisplayContainer.classList.remove('hidden');
-
-    resizeCanvas();
-
-    // ★★★ 追加: audioContextを初期化 ★★★
-    if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
-
-    spawnEnemy();
-    gameInterval = setInterval(gameLoop, 1000 / 60);
-}
-
-
-// キャンバスのリサイズ処理
-function resizeCanvas() {
-    if (!gameContainer.classList.contains('hidden')) {
-        const padding = 0.1;
-        // ブラウザのツールバーの高さを動的に取得
-        const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-        
-        gameContainer.style.height = `${viewportHeight * (1 - padding)}px`;
-        gameContainer.style.width = `${window.innerWidth * (1 - padding)}px`;
-        
-        canvas.width = gameContainer.offsetWidth * 0.75;
-        canvas.height = gameContainer.offsetHeight;
-    } else {
-        canvas.width = 800 * 0.75;
-        canvas.height = 600;
-    }
-}
-
-// ゲームループ
-function gameLoop() {
-    if (isGameOver) {
-        clearInterval(gameInterval);
-        return;
-    }
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const boundaryX = 0;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(0, canvas.height);
-    ctx.strokeStyle = 'red';
-    ctx.lineWidth = 3;
-    ctx.stroke();
-
-    enemies.forEach(enemy => {
-        enemy.update();
-        enemy.draw();
-    });
-
-    enemies = enemies.filter(enemy => {
-        if (enemy.x <= boundaryX) {
-            gameOver();
-            return false;
-        }
-        return true;
-    });
-}
-
-// 敵の生成
-function spawnEnemy(count = 1) {
-    for (let i = 0; i < count; i++) {
-        const randomColor = colorNames[Math.floor(Math.random() * colorNames.length)];
-        enemies.push(new Enemy(colors[randomColor]));
-    }
-}
-
-// UIの更新
 function updateUI() {
     scoreDisplay.textContent = score;
     comboCountDisplay.textContent = combo;
 }
 
-// 撃破処理
-function handleHit(x, y) {
+function updateEnemyBorders() {
+    enemies.forEach(e => {
+        e.borderColor = (colors[selectedColor] === e.color) ? '#f39c12' : 'white';
+    });
+}
+
+function gameOver() {
+    isGameOver = true;
+    finalScoreDisplay.textContent = score;
+    gameOverScreen.classList.remove('hidden');
+    scoreDisplayContainer.classList.add('hidden');
+}
+
+function gameLoop(timestamp) {
     if (isGameOver) return;
 
+    const dt = (timestamp - lastTime) / 1000;
+    lastTime = timestamp;
+
+    const dpr = window.devicePixelRatio || 1;
+    const logicalWidth = canvas.width / dpr;
+    const logicalHeight = canvas.height / dpr;
+
+    ctx.clearRect(0, 0, logicalWidth, logicalHeight);
+
+    // デッドライン
+    ctx.strokeStyle = 'red';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(2, 0);
+    ctx.lineTo(2, logicalHeight);
+    ctx.stroke();
+
     for (let i = enemies.length - 1; i >= 0; i--) {
-        const enemy = enemies[i];
-        if (x > enemy.x && x < enemy.x + enemy.size && y > enemy.y && y < enemy.y + enemy.size) {
-            if (colors[selectedColor] === enemy.color) {
+        enemies[i].update(dt);
+        enemies[i].draw();
+
+        if (enemies[i].x <= 0) {
+            gameOver();
+        }
+    }
+    requestAnimationFrame(gameLoop);
+}
+
+function handleHit(clientX, clientY) {
+    if (isGameOver) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        const e = enemies[i];
+        if (x > e.x && x < e.x + e.size && y > e.y && y < e.y + e.size) {
+            if (colors[selectedColor] === e.color) {
                 combo++;
                 score += 100 * combo;
                 enemiesDefeatedCount++;
                 enemies.splice(i, 1);
-                spawnEnemy(1);
-                if (enemiesDefeatedCount % 5 === 0) {
-                    spawnEnemy(1);
-                }
-                playHitSound(); // ★★★ 復元: 効果音を再生 ★★★
+                spawnEnemy();
+                // 5体ごとに少しだけ追加（難易度の緩やかな上昇）
+                if (enemiesDefeatedCount % 5 === 0) spawnEnemy();
+                playHitSound();
             } else {
                 combo = 0;
             }
-            // ★★★ 敵のボーダーカラーを更新する処理を追加 ★★★
             updateEnemyBorders();
             updateUI();
             return;
@@ -214,82 +155,47 @@ function handleHit(x, y) {
     }
 }
 
-// ゲームオーバー処理
-function gameOver() {
-    isGameOver = true;
-    finalScoreDisplay.textContent = score;
-    gameOverScreen.classList.remove('hidden');
-    gameContainer.classList.add('hidden');
-    scoreDisplayContainer.classList.add('hidden');
+function startGame() {
+    if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+    startScreen.classList.add('hidden');
+    gameOverScreen.classList.add('hidden');
+    gameContainer.classList.remove('hidden');
+    scoreDisplayContainer.classList.remove('hidden');
+    
+    score = 0;
+    combo = 0;
+    enemies = [];
+    isGameOver = false;
+    enemiesDefeatedCount = 0;
+    
+    resizeCanvas();
+    spawnEnemy();
+    lastTime = performance.now();
+    requestAnimationFrame(gameLoop);
+    updateUI();
 }
-
-// 敵のボーダーカラーを更新する関数
-function updateEnemyBorders() {
-    enemies.forEach(enemy => {
-        if (colors[selectedColor] === enemy.color) {
-            enemy.borderColor = '#f39c12';
-        } else {
-            enemy.borderColor = 'white';
-        }
-    });
-}
-
-// イベントリスナーの設定
 
 startButton.addEventListener('click', startGame);
+restartButton.addEventListener('click', startGame);
 
-let isColorSwitching = false;
-colorButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        colorButtons.forEach(btn => btn.classList.remove('selected'));
-        button.classList.add('selected');
-        combo = 0;
-        selectedColor = button.dataset.color;
-        // ★★★ 敵のボーダーカラーを更新する処理を追加 ★★★
+colorButtons.forEach(btn => {
+    const select = (e) => {
+        if (e) e.preventDefault();
+        selectedColor = btn.dataset.color;
+        colorButtons.forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
         updateEnemyBorders();
-        updateUI();
-    });
-
-    button.addEventListener('touchstart', (e) => {
-        if (isColorSwitching) {
-            return;
-        }
-        isColorSwitching = true;
-
-        colorButtons.forEach(btn => btn.classList.remove('selected'));
-        button.classList.add('selected');
-        combo = 0;
-        selectedColor = button.dataset.color;
-        // ★★★ 敵のボーダーカラーを更新する処理を追加 ★★★
-        updateEnemyBorders();
-        updateUI();
-    }, { passive: true });
-
-    button.addEventListener('touchend', () => {
-        isColorSwitching = false;
-    });
+    };
+    btn.addEventListener('touchstart', select, { passive: false });
+    btn.addEventListener('mousedown', select);
 });
 
-canvas.addEventListener('click', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    handleHit(x, y);
-});
-
+canvas.addEventListener('mousedown', (e) => handleHit(e.clientX, e.clientY));
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    const x = e.touches[0].clientX - rect.left;
-    const y = e.touches[0].clientY - rect.top;
-    handleHit(x, y);
+    handleHit(e.touches[0].clientX, e.touches[0].clientY);
 }, { passive: false });
 
-restartButton.addEventListener('click', init);
-
-init(
-    // 画面の向きが変わったときのイベントリスナー
-    window.addEventListener('orientationchange', () => {
-        resizeCanvas();
-    })
-);
+window.addEventListener('resize', resizeCanvas);
+document.querySelector('[data-color="red"]').classList.add('selected');

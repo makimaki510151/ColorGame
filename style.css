@@ -1,123 +1,130 @@
 body {
     background-color: #2c3e50;
     color: #ecf0f1;
-    font-family: 'Arial', sans-serif;
+    font-family: sans-serif;
     display: flex;
     justify-content: center;
-    /* height: 100vh; から変更 */
-    height: 100dvh; 
+    align-items: center;
+    height: 100dvh;
     margin: 0;
     overflow: hidden;
-    position: relative;
 }
 
 #game-container {
     display: flex;
-    width: 90vw;
-    /* ★★★ 削除: height: 90vh; ★★★ */
-    max-width: 1200px;
-    max-height: 800px;
-    border: 3px solid #f39c12;
+    flex-direction: row;
+    width: 100vw;
+    height: 100dvh;
     background-color: #34495e;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+/* 縦画面レイアウト：パレットを画面下部に大きく配置 */
+@media (orientation: portrait) {
+    #game-container {
+        flex-direction: column-reverse;
+    }
+    #color-palette {
+        width: 100% !important;
+        height: 35% !important; /* 画面の約3分の1 */
+        flex-direction: row !important;
+        padding: 5px !important;
+    }
+    .color-button {
+        width: 30% !important;
+        height: 90% !important;
+    }
+    #game-canvas {
+        width: 100% !important;
+        height: 65% !important;
+    }
 }
 
 #color-palette {
-    width: 25%;
+    width: 33%; /* 横画面でも3分の1を確保 */
     display: flex;
     flex-direction: column;
     justify-content: space-around;
     align-items: center;
-    padding: 10px;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 5;
+    box-sizing: border-box;
 }
 
 .color-button {
-    width: 80%;
-    height: 25%;
-    border-radius: 10px;
-    border: 3px solid #ecf0f1;
+    width: 90%;
+    height: 28%; /* 縦に3等分に近いサイズ */
+    border-radius: 20px;
+    border: 6px solid #ecf0f1;
     cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.4);
+    transition: transform 0.1s, border-color 0.2s;
 }
 
-.color-button:hover,
+.color-button[data-color="red"] { background-color: #ff6347; }
+.color-button[data-color="green"] { background-color: #3cb371; }
+.color-button[data-color="blue"] { background-color: #4682b4; }
+
 .color-button.selected {
-    transform: scale(1.05);
+    transform: scale(0.95); /* 選択時に少し沈む演出 */
     border-color: #f39c12;
-    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 15px #f39c12;
 }
 
 #game-canvas {
-    width: 75%;
+    width: 67%;
     height: 100%;
+    touch-action: none;
 }
 
 #score-display {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 2em;
+    top: 15px;
+    left: 15px;
+    font-size: 1.5em;
     font-weight: bold;
-    text-align: right;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
     pointer-events: none;
-    /* ★★★ 追加：下の要素への操作を可能にする ★★★ */
-    z-index: 2;
-    /* ★★★ 変更：ゲームウィンドウより手前に表示 ★★★ */
+    z-index: 6;
 }
 
-/* スタート画面、ゲームオーバー画面共通のスタイル */
 #start-screen,
 #game-over-screen {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: rgba(44, 62, 80, 0.9);
-    padding: 30px 50px;
+    background-color: rgba(44, 62, 80, 0.95);
+    padding: 30px;
     border-radius: 15px;
     text-align: center;
     border: 3px solid #f39c12;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
     z-index: 10;
-    
-    /* 修正 */
-    max-height: 90vh; /* 画面の高さの90%を最大に */
-    overflow-y: auto; /* コンテンツがはみ出た場合にスクロールを可能に */
-}
-
-#start-screen h1,
-#game-over-screen h2 {
-    color: #f39c12;
-    margin-bottom: 20px;
-}
-
-#start-screen p {
-    font-size: 1.2em;
-    line-height: 1.5;
-    margin-bottom: 20px;
+    width: 85%;
+    max-width: 400px;
 }
 
 #start-button,
 #restart-button {
-    padding: 15px 30px;
-    font-size: 1.5em;
+    padding: 15px 40px;
+    font-size: 1.3em;
     font-weight: bold;
     color: #2c3e50;
     background-color: #f39c12;
     border: none;
-    border-radius: 8px;
+    border-radius: 50px;
     cursor: pointer;
-    transition: background-color 0.2s, transform 0.2s;
+    box-shadow: 0 5px #d35400;
+    transition: all 0.1s;
+    margin-top: 20px;
 }
 
-#start-button:hover,
-#restart-button:hover {
-    background-color: #e67e22;
-    transform: scale(1.05);
+#start-button:active,
+#restart-button:active {
+    box-shadow: 0 0 #d35400;
+    transform: translateY(5px);
 }
 
 .hidden {
-    display: none;
+    display: none !important;
 }
