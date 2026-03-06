@@ -29,9 +29,18 @@ class Enemy {
         this.size = 50;
         const logicalWidth = canvas.width / dpr;
         const logicalHeight = canvas.height / dpr;
-        
-        this.x = logicalWidth + this.size;
-        this.y = Math.random() * (logicalHeight - this.size);
+
+        // 縦画面か横画面かで出現位置を分岐
+        if (window.innerHeight > window.innerWidth) {
+            // 縦画面：上から下へ
+            this.x = Math.random() * (logicalWidth - this.size);
+            this.y = -this.size;
+        } else {
+            // 横画面：右から左へ
+            this.x = logicalWidth + this.size;
+            this.y = Math.random() * (logicalHeight - this.size);
+        }
+
         const randomColorName = colorNames[Math.floor(Math.random() * colorNames.length)];
         this.color = colors[randomColorName];
         this.speed = (Math.random() * 30 + 60); 
@@ -47,7 +56,21 @@ class Enemy {
     }
 
     update(dt) {
-        this.x -= this.speed * dt;
+        if (window.innerHeight > window.innerWidth) {
+            // 縦画面：Y座標を増やす
+            this.y += this.speed * dt;
+        } else {
+            // 横画面：X座標を減らす
+            this.x -= this.speed * dt;
+        }
+    }
+
+    isOut(width, height) {
+        if (window.innerHeight > window.innerWidth) {
+            return this.y > height; // 下端に到達
+        } else {
+            return this.x < 0; // 左端に到達
+        }
     }
 }
 
@@ -107,18 +130,26 @@ function gameLoop(timestamp) {
 
     ctx.clearRect(0, 0, logicalWidth, logicalHeight);
 
+    // デッドライン描画（画面の向きに合わせて位置を変更）
     ctx.strokeStyle = 'red';
     ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.moveTo(2, 0);
-    ctx.lineTo(2, logicalHeight);
+    if (window.innerHeight > window.innerWidth) {
+        // 縦画面：下端にライン
+        ctx.moveTo(0, logicalHeight - 2);
+        ctx.lineTo(logicalWidth, logicalHeight - 2);
+    } else {
+        // 横画面：左端にライン
+        ctx.moveTo(2, 0);
+        ctx.lineTo(2, logicalHeight);
+    }
     ctx.stroke();
 
     for (let i = enemies.length - 1; i >= 0; i--) {
         enemies[i].update(dt);
         enemies[i].draw();
 
-        if (enemies[i].x <= 0) {
+        if (enemies[i].isOut(logicalWidth, logicalHeight)) {
             gameOver();
         }
     }
@@ -179,16 +210,12 @@ restartButton.addEventListener('click', startGame);
 colorButtons.forEach(btn => {
     const select = (e) => {
         if (e) e.preventDefault();
-        
-        // 色を切り替えた時点でコンボ（スコアボーナス）をリセット
         combo = 0; 
-        
         selectedColor = btn.dataset.color;
         colorButtons.forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
-        
         updateEnemyBorders();
-        updateUI(); // コンボ表示を即座に更新
+        updateUI();
     };
     btn.addEventListener('touchstart', select, { passive: false });
     btn.addEventListener('mousedown', select);

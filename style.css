@@ -18,14 +18,14 @@ body {
     background-color: #34495e;
 }
 
-/* 縦画面レイアウト：パレットを画面下部に大きく配置 */
+/* 縦画面：パレットを下に、キャンバスを上に配置 */
 @media (orientation: portrait) {
     #game-container {
-        flex-direction: column-reverse;
+        flex-direction: column-reverse; /* パレットが下 */
     }
     #color-palette {
         width: 100% !important;
-        height: 35% !important; /* 画面の約3分の1 */
+        height: 35% !important;
         flex-direction: row !important;
         padding: 5px !important;
     }
@@ -40,7 +40,7 @@ body {
 }
 
 #color-palette {
-    width: 33%; /* 横画面でも3分の1を確保 */
+    width: 33%;
     display: flex;
     flex-direction: column;
     justify-content: space-around;
@@ -53,7 +53,7 @@ body {
 
 .color-button {
     width: 90%;
-    height: 28%; /* 縦に3等分に近いサイズ */
+    height: 28%;
     border-radius: 20px;
     border: 6px solid #ecf0f1;
     cursor: pointer;
@@ -66,7 +66,7 @@ body {
 .color-button[data-color="blue"] { background-color: #4682b4; }
 
 .color-button.selected {
-    transform: scale(0.95); /* 選択時に少し沈む演出 */
+    transform: scale(0.95);
     border-color: #f39c12;
     box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 15px #f39c12;
 }
