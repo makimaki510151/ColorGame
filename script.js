@@ -30,13 +30,10 @@ class Enemy {
         const logicalWidth = canvas.width / dpr;
         const logicalHeight = canvas.height / dpr;
 
-        // 縦画面か横画面かで出現位置を分岐
         if (window.innerHeight > window.innerWidth) {
-            // 縦画面：上から下へ
             this.x = Math.random() * (logicalWidth - this.size);
             this.y = -this.size;
         } else {
-            // 横画面：右から左へ
             this.x = logicalWidth + this.size;
             this.y = Math.random() * (logicalHeight - this.size);
         }
@@ -57,19 +54,19 @@ class Enemy {
 
     update(dt) {
         if (window.innerHeight > window.innerWidth) {
-            // 縦画面：Y座標を増やす
             this.y += this.speed * dt;
         } else {
-            // 横画面：X座標を減らす
             this.x -= this.speed * dt;
         }
     }
 
     isOut(width, height) {
         if (window.innerHeight > window.innerWidth) {
-            return this.y > height; // 下端に到達
+            // 修正：敵の底辺(y + size)が画面下端に到達したか判定
+            return (this.y + this.size) > height;
         } else {
-            return this.x < 0; // 左端に到達
+            // 修正：敵の左辺(x)が画面左端(判定線付近)に到達したか判定
+            return this.x < 0;
         }
     }
 }
@@ -130,29 +127,32 @@ function gameLoop(timestamp) {
 
     ctx.clearRect(0, 0, logicalWidth, logicalHeight);
 
-    // デッドライン描画（画面の向きに合わせて位置を変更）
-    ctx.strokeStyle = 'red';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    if (window.innerHeight > window.innerWidth) {
-        // 縦画面：下端にライン
-        ctx.moveTo(0, logicalHeight - 2);
-        ctx.lineTo(logicalWidth, logicalHeight - 2);
-    } else {
-        // 横画面：左端にライン
-        ctx.moveTo(2, 0);
-        ctx.lineTo(2, logicalHeight);
-    }
-    ctx.stroke();
-
+    // 敵の更新と描画
     for (let i = enemies.length - 1; i >= 0; i--) {
         enemies[i].update(dt);
         enemies[i].draw();
 
         if (enemies[i].isOut(logicalWidth, logicalHeight)) {
             gameOver();
+            return;
         }
     }
+
+    // デッドラインの描画（敵の上に重なるよう後に描画）
+    ctx.strokeStyle = 'red';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    if (window.innerHeight > window.innerWidth) {
+        // 縦画面：下端
+        ctx.moveTo(0, logicalHeight - 2);
+        ctx.lineTo(logicalWidth, logicalHeight - 2);
+    } else {
+        // 横画面：左端
+        ctx.moveTo(2, 0);
+        ctx.lineTo(2, logicalHeight);
+    }
+    ctx.stroke();
+
     requestAnimationFrame(gameLoop);
 }
 
@@ -166,21 +166,33 @@ function handleHit(clientX, clientY) {
         const e = enemies[i];
         if (x > e.x && x < e.x + e.size && y > e.y && y < e.y + e.size) {
             if (colors[selectedColor] === e.color) {
-                combo++;
-                score += 100 * combo;
-                enemiesDefeatedCount++;
-                enemies.splice(i, 1);
-                spawnEnemy();
-                if (enemiesDefeatedCount % 5 === 0) spawnEnemy();
-                playHitSound();
-            } else {
-                combo = 0;
+                processHit(i);
+                return;
             }
+        }
+    }
+
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        const e = enemies[i];
+        if (x > e.x && x < e.x + e.size && y > e.y && y < e.y + e.size) {
+            combo = 0;
             updateEnemyBorders();
             updateUI();
             return;
         }
     }
+}
+
+function processHit(index) {
+    combo++;
+    score += 100 * combo;
+    enemiesDefeatedCount++;
+    enemies.splice(index, 1);
+    spawnEnemy();
+    if (enemiesDefeatedCount % 5 === 0) spawnEnemy();
+    playHitSound();
+    updateEnemyBorders();
+    updateUI();
 }
 
 function startGame() {
