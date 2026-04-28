@@ -93,24 +93,24 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     background-color: rgba(44, 62, 80, 0.95);
-    padding: 34px;
+    padding: 42px;
     border-radius: 15px;
     text-align: center;
     border: 3px solid #f39c12;
     z-index: 10;
-    width: 85%;
-    max-width: 400px;
+    width: 90%;
+    max-width: 480px;
 }
 
 #start-screen h1 {
-    font-size: 2.2em;
-    margin: 0 0 10px;
+    font-size: 2.8em;
+    margin: 0 0 14px;
 }
 
 #start-screen p,
 #game-over-screen p {
-    font-size: 1.2em;
-    line-height: 1.4;
+    font-size: 1.35em;
+    line-height: 1.45;
 }
 
 #game-over-screen h2 {
@@ -120,8 +120,8 @@ body {
 
 #start-button,
 #restart-button {
-    padding: 16px 44px;
-    font-size: 1.4em;
+    padding: 18px 52px;
+    font-size: 1.55em;
     font-weight: bold;
     color: #2c3e50;
     background-color: #f39c12;
@@ -130,7 +130,7 @@ body {
     cursor: pointer;
     box-shadow: 0 5px #d35400;
     transition: all 0.1s;
-    margin-top: 20px;
+    margin-top: 24px;
 }
 
 #start-button:active,

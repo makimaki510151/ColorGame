@@ -71,15 +71,15 @@ body {
 #start-screen, #game-over-screen {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
     background-color: rgba(44, 62, 80, 0.95);
-    padding: 34px; border-radius: 15px; text-align: center;
-    border: 3px solid #f39c12; z-index: 10; width: 85%; max-width: 400px;
+    padding: 42px; border-radius: 15px; text-align: center;
+    border: 3px solid #f39c12; z-index: 10; width: 90%; max-width: 480px;
 }
-#start-screen h1 { font-size: 2.2em; margin: 0 0 10px; }
-#start-screen p, #game-over-screen p { font-size: 1.2em; line-height: 1.4; }
+#start-screen h1 { font-size: 2.8em; margin: 0 0 14px; }
+#start-screen p, #game-over-screen p { font-size: 1.35em; line-height: 1.45; }
 #game-over-screen h2 { font-size: 2em; margin: 0 0 8px; }
 #start-button, #restart-button {
-    padding: 16px 44px; font-size: 1.4em; font-weight: bold;
-    color: #2c3e50; background-color: #f39c12; border: none; border-radius: 50px; margin-top: 20px;
+    padding: 18px 52px; font-size: 1.55em; font-weight: bold;
+    color: #2c3e50; background-color: #f39c12; border: none; border-radius: 50px; margin-top: 24px;
 }
 .hidden { display: none !important; }
 @media (orientation: landscape) and (hover: none) and (pointer: coarse) {
@@ -158,7 +158,7 @@ const colorNames = Object.keys(colors);
 class Enemy {
     constructor() {
         const dpr = window.devicePixelRatio || 1;
-        this.size = 58;
+        this.size = 70;
         const logicalWidth = canvas.width / dpr;
         const logicalHeight = canvas.height / dpr;
 
