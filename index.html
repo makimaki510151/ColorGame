@@ -7,6 +7,11 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div id="rotate-lock-screen">
+        <h2>縦向きでプレイしてください</h2>
+        <p>このゲームはスマホ縦画面専用です。端末を縦向きに戻すと再開できます。</p>
+    </div>
+
     <div id="start-screen">
         <h1>カラーマッチ・シューター</h1>
         <p>色を選択し、流れてくる同じ色の敵を撃破しよう！</p>
@@ -19,7 +24,7 @@
             <div class="color-button" data-color="green"></div>
             <div class="color-button" data-color="blue"></div>
         </div>
-        <canvas id="game-canvas"></canvas>
+        <canvas id="unity-canvas"></canvas>
     </div>
 
     <div id="game-over-screen" class="hidden">
@@ -32,6 +37,22 @@
         スコア: <span id="current-score">0</span><br>
         コンボ: <span id="combo-count">0</span>
     </div>
-    <script src="script.js"></script>
+    <script src="Build/ColorGame.loader.js"></script>
+    <script>
+        window.__GAME_ASSET_BASE__ = "Build/";
+        const unityCanvas = document.getElementById("unity-canvas");
+        const config = {
+            dataUrl: "Build/ColorGame.data.gz",
+            frameworkUrl: "Build/ColorGame.framework.js.gz",
+            codeUrl: "Build/ColorGame.wasm.gz",
+            companyName: "nec",
+            productName: "ColorGame",
+            productVersion: "1.0.0"
+        };
+
+        createUnityInstance(unityCanvas, config).catch((message) => {
+            alert(message);
+        });
+    </script>
 </body>
 </html>

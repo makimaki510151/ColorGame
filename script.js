@@ -1,4 +1,136 @@
-const canvas = document.getElementById('game-canvas');
+function ensureRuntimeStyles() {
+    if (document.getElementById('color-game-runtime-style')) return;
+    const style = document.createElement('style');
+    style.id = 'color-game-runtime-style';
+    style.textContent = `
+body {
+    background-color: #2c3e50;
+    color: #ecf0f1;
+    font-family: sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100dvh;
+    margin: 0;
+    overflow: hidden;
+}
+#rotate-lock-screen {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(12, 20, 30, 0.96);
+    color: #ecf0f1;
+    text-align: center;
+    align-content: center;
+    padding: 24px;
+    box-sizing: border-box;
+}
+#game-container {
+    display: flex;
+    flex-direction: column-reverse;
+    width: min(100vw, 56.25dvh);
+    height: min(100dvh, 177.78dvw);
+    max-width: 100vw;
+    max-height: 100dvh;
+    background-color: #34495e;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+#color-palette {
+    width: 100%;
+    height: 34%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    padding: 6px;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 5;
+    box-sizing: border-box;
+}
+.color-button {
+    width: 30%;
+    height: 88%;
+    border-radius: 20px;
+    border: 6px solid #ecf0f1;
+}
+.color-button[data-color="red"] { background-color: #ff6347; }
+.color-button[data-color="green"] { background-color: #3cb371; }
+.color-button[data-color="blue"] { background-color: #4682b4; }
+.color-button.selected {
+    transform: scale(0.95);
+    border-color: #f39c12;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 15px #f39c12;
+}
+#game-canvas, #unity-canvas { width: 100%; height: 66%; touch-action: none; }
+#score-display {
+    position: absolute; top: 15px; left: 15px;
+    font-size: 1.7em; font-weight: bold; pointer-events: none; z-index: 6;
+}
+#start-screen, #game-over-screen {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background-color: rgba(44, 62, 80, 0.95);
+    padding: 34px; border-radius: 15px; text-align: center;
+    border: 3px solid #f39c12; z-index: 10; width: 85%; max-width: 400px;
+}
+#start-screen h1 { font-size: 2.2em; margin: 0 0 10px; }
+#start-screen p, #game-over-screen p { font-size: 1.2em; line-height: 1.4; }
+#game-over-screen h2 { font-size: 2em; margin: 0 0 8px; }
+#start-button, #restart-button {
+    padding: 16px 44px; font-size: 1.4em; font-weight: bold;
+    color: #2c3e50; background-color: #f39c12; border: none; border-radius: 50px; margin-top: 20px;
+}
+.hidden { display: none !important; }
+@media (orientation: landscape) and (hover: none) and (pointer: coarse) {
+    #rotate-lock-screen { display: grid; }
+    #start-screen, #game-container, #game-over-screen, #score-display { display: none !important; }
+}
+`;
+    document.head.appendChild(style);
+}
+
+function ensureRuntimeDom() {
+    const existingContainer = document.getElementById('game-container');
+    const existingCanvas = document.getElementById('game-canvas') || document.getElementById('unity-canvas');
+    if (existingContainer && existingCanvas && document.getElementById('start-screen')) return;
+
+    ensureRuntimeStyles();
+    document.body.innerHTML = `
+    <div id="rotate-lock-screen">
+        <h2>縦向きでプレイしてください</h2>
+        <p>このゲームはスマホ縦画面専用です。端末を縦向きに戻すと再開できます。</p>
+    </div>
+    <div id="start-screen">
+        <h1>カラーマッチ・シューター</h1>
+        <p>色を選択し、流れてくる同じ色の敵を撃破しよう！</p>
+        <button id="start-button">ゲームスタート</button>
+    </div>
+    <div id="game-container" class="hidden">
+        <div id="color-palette">
+            <div class="color-button" data-color="red"></div>
+            <div class="color-button" data-color="green"></div>
+            <div class="color-button" data-color="blue"></div>
+        </div>
+        <canvas id="unity-canvas"></canvas>
+    </div>
+    <div id="game-over-screen" class="hidden">
+        <h2>ゲームオーバー</h2>
+        <p>スコア: <span id="final-score">0</span></p>
+        <button id="restart-button">もう一度プレイ</button>
+    </div>
+    <div id="score-display" class="hidden">
+        スコア: <span id="current-score">0</span><br>
+        コンボ: <span id="combo-count">0</span>
+    </div>`;
+}
+
+ensureRuntimeDom();
+
+const canvas = document.getElementById('game-canvas') || document.getElementById('unity-canvas');
+if (!canvas) {
+    throw new Error('Canvas element not found. Expected #game-canvas or #unity-canvas.');
+}
 const ctx = canvas.getContext('2d');
 const colorButtons = document.querySelectorAll('.color-button');
 const scoreDisplay = document.getElementById('current-score');
@@ -26,7 +158,7 @@ const colorNames = Object.keys(colors);
 class Enemy {
     constructor() {
         const dpr = window.devicePixelRatio || 1;
-        this.size = 50;
+        this.size = 58;
         const logicalWidth = canvas.width / dpr;
         const logicalHeight = canvas.height / dpr;
 
@@ -76,6 +208,7 @@ function resizeCanvas() {
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(dpr, dpr);
     updateEnemyBorders();
 }
@@ -98,8 +231,8 @@ function spawnEnemy() {
 }
 
 function updateUI() {
-    scoreDisplay.textContent = score;
-    comboCountDisplay.textContent = combo;
+    if (scoreDisplay) scoreDisplay.textContent = score;
+    if (comboCountDisplay) comboCountDisplay.textContent = combo;
 }
 
 function updateEnemyBorders() {
@@ -110,9 +243,9 @@ function updateEnemyBorders() {
 
 function gameOver() {
     isGameOver = true;
-    finalScoreDisplay.textContent = score;
-    gameOverScreen.classList.remove('hidden');
-    scoreDisplayContainer.classList.add('hidden');
+    if (finalScoreDisplay) finalScoreDisplay.textContent = score;
+    if (gameOverScreen) gameOverScreen.classList.remove('hidden');
+    if (scoreDisplayContainer) scoreDisplayContainer.classList.add('hidden');
 }
 
 function gameLoop(timestamp) {
@@ -198,10 +331,10 @@ function processHit(index) {
 function startGame() {
     if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
     
-    startScreen.classList.add('hidden');
-    gameOverScreen.classList.add('hidden');
-    gameContainer.classList.remove('hidden');
-    scoreDisplayContainer.classList.remove('hidden');
+    if (startScreen) startScreen.classList.add('hidden');
+    if (gameOverScreen) gameOverScreen.classList.add('hidden');
+    if (gameContainer) gameContainer.classList.remove('hidden');
+    if (scoreDisplayContainer) scoreDisplayContainer.classList.remove('hidden');
     
     score = 0;
     combo = 0;
@@ -216,8 +349,8 @@ function startGame() {
     updateUI();
 }
 
-startButton.addEventListener('click', startGame);
-restartButton.addEventListener('click', startGame);
+if (startButton) startButton.addEventListener('click', startGame);
+if (restartButton) restartButton.addEventListener('click', startGame);
 
 colorButtons.forEach(btn => {
     const select = (e) => {
@@ -240,4 +373,7 @@ canvas.addEventListener('touchstart', (e) => {
 }, { passive: false });
 
 window.addEventListener('resize', resizeCanvas);
-document.querySelector('[data-color="red"]').classList.add('selected');
+const defaultRedButton = document.querySelector('[data-color="red"]');
+if (defaultRedButton) {
+    defaultRedButton.classList.add('selected');
+}
